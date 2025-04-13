@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:f_logs/f_logs.dart';
+import 'package:flutter/material.dart';
 import 'package:log_flutter/core/models/pokemon_model.dart';
+import 'package:log_flutter/core/services/favorites_database.dart';
 import 'package:log_flutter/core/services/poke_api_service.dart';
+import 'package:log_flutter/pages/favoritos/favoritos_page.dart';
 
 class PokemonPage extends StatefulWidget {
   const PokemonPage({super.key});
@@ -15,6 +17,8 @@ class _PokemonPageState extends State<PokemonPage> {
   PokemonModel? _pokemon;
   bool _isLoading = false;
   String? _mensagemErro;
+  bool _favorito = false;
+  bool _exibirBotaoSalvar = false;
 
   Future<void> _buscarPokemon() async {
     final nome = _controller.text.trim().toLowerCase();
@@ -116,30 +120,62 @@ class _PokemonPageState extends State<PokemonPage> {
               ),
             ),
             const Divider(),
-            Text(
-              'Altura: ${_pokemon!.height}',
-            ),
-            Text(
-              'Peso: ${_pokemon!.weight}',
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            Text('Tipos: ${_pokemon!.types.join(', ')},'),
-            Text('Habilidades: ${_pokemon!.abilities.join(', ')},'),
-            const SizedBox(
-              height: 8,
-            ),
+            Text('Altura: ${_pokemon!.height}'),
+            Text('Peso: ${_pokemon!.weight}'),
+            const SizedBox(height: 8),
+            Text('Tipos: ${_pokemon!.types.join(', ')}'),
+            Text('Habilidades: ${_pokemon!.abilities.join(', ')}'),
+            const SizedBox(height: 8),
             const Text(
               'Status base:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             ..._pokemon!.stats.entries.map(
-              (entry) => Text(
-                '${entry.key.toUpperCase()}: ${entry.value}',
-              ),
+              (entry) => Text('${entry.key.toUpperCase()}: ${entry.value}'),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    _favorito ? Icons.favorite : Icons.favorite_border,
+                    color: Colors.red,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _favorito = !_favorito;
+                      _exibirBotaoSalvar = _favorito;
+                    });
+                  },
+                ),
+                if (_exibirBotaoSalvar)
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      await FavoritesDatabase.insert(_pokemon!);
+
+                      FLog.info(
+                        className: 'PokemonPage',
+                        methodName: 'salvarFavorito',
+                        text:
+                            'Pokémon ${_pokemon!.name} foi favoritado e salvo no SQLite.',
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('${_pokemon!.name} salvo como favorito!'),
+                        ),
+                      );
+
+                      setState(() {
+                        _exibirBotaoSalvar = false;
+                      });
+                    },
+                    icon: const Icon(Icons.save),
+                    label: const Text('Salvar'),
+                  ),
+              ],
             ),
           ],
         ),
@@ -151,9 +187,29 @@ class _PokemonPageState extends State<PokemonPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Buscar Pokémon',
-        ),
+        title: const Text('Buscar Pokémon'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            tooltip: 'Ver favoritos',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritosPage()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.article),
+            tooltip: 'Ver logs',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PokemonPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
