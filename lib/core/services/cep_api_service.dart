@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:log_flutter/models/cep_model.dart';
+import 'package:log_flutter/core/models/cep_model.dart';
 
 class CepApiService {
   static Future<CepModel?> buscarCep(String cep) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:log_flutter/pages/pokemon/pokemon_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -7,7 +8,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     //TODO: Create API screens
     final apis = [
-      {'nome': 'Pokédex', 'page': const HomePage()},
+      {'nome': 'Pokédex', 'page': const PokemonPage()},
       {'nome': 'CEP (ViaCEP)', 'page': const HomePage()},
       {'nome': 'Clima (Open-Meteo)', 'page': const HomePage()},
     ];
