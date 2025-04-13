@@ -49,6 +49,37 @@ class PokemonModel {
     );
   }
 
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'height': height,
+      'weight': weight,
+      'types': types.join(','),
+      'abilities': abilities.join(','),
+      'imageUrl': imageUrl,
+      'stats': stats.entries.map((e) => '${e.key}:${e.value}').join(','),
+    };
+  }
+
+  factory PokemonModel.fromMap(Map<String, dynamic> map) {
+    return PokemonModel(
+      id: map['id'],
+      name: map['name'],
+      height: map['height'],
+      weight: map['weight'],
+      types: (map['types'] as String).split(','),
+      abilities: (map['abilities'] as String).split(','),
+      imageUrl: map['imageUrl'],
+      stats: Map.fromEntries(
+        (map['stats'] as String).split(',').map((entry) {
+          final parts = entry.split(':');
+          return MapEntry(parts[0], int.tryParse(parts[1]) ?? 0);
+        }),
+      ),
+    );
+  }
+
   @override
   String toString() {
     return 'ID: $id, Nome: $name, Tipos: $types';
