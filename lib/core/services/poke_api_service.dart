@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:log_flutter/models/pokemon_model.dart';
+import 'package:log_flutter/core/models/pokemon_model.dart';
 
 class PokeApiService {
   static Future<PokemonModel?> buscarPokemon(String nome) async {

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:log_flutter/models/weather_model.dart';
+import 'package:log_flutter/core/models/weather_model.dart';
 
 class WeatherApiService {
   static Future<WeatherModel?> buscarClima(
