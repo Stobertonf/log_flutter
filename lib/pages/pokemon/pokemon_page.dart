@@ -1,7 +1,8 @@
-import 'package:f_logs/f_logs.dart';
 import 'package:flutter/material.dart';
+import 'package:log_flutter/core/controllers/pokemon/pokemon_controller.dart';
 import 'package:log_flutter/pages/log/logs_page.dart';
 import 'package:log_flutter/core/models/pokemon_model.dart';
+import 'package:log_flutter/core/widgets/snackbar/custom_snackbar.dart';
 import 'package:log_flutter/core/services/poke_api_service.dart';
 import 'package:log_flutter/pages/favoritos/favoritos_page.dart';
 import 'package:log_flutter/core/databases/favorites_database.dart';
@@ -21,203 +22,97 @@ class _PokemonPageState extends State<PokemonPage> {
   bool _favorito = false;
   bool _exibirBotaoSalvar = false;
 
-  Future<void> _buscarPokemon() async {
-    final nome = _controller.text.trim().toLowerCase();
-    if (nome.isEmpty) return;
-
+  Future<void> _buscarPokemon(BuildContext context) async {
     setState(() {
       _isLoading = true;
       _mensagemErro = null;
       _pokemon = null;
     });
 
-    FLog.info(
-      className: 'PokemonPage',
-      methodName: '_buscarPokemon',
-      text: 'Buscando Pokémon: $nome',
-    );
+    final nome = _controller.text.trim().toLowerCase();
+
+    if (nome.isEmpty) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      CustomSnackBar.show(
+        context: context,
+        message: 'Por favor, digite o nome do Pokémon.',
+        type: SnackBarType.warning,
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
 
     try {
       final resultado = await PokeApiService.buscarPokemon(nome);
 
       if (resultado != null) {
+        final jaFavorito = await FavoritesDatabase.isFavorited(resultado.id);
+        resultado.isFavorite = jaFavorito;
+
         setState(() {
           _pokemon = resultado;
+          _favorito = jaFavorito;
+          _exibirBotaoSalvar = !jaFavorito;
         });
 
-        FLog.info(
-          className: 'PokemonPage',
-          methodName: '_buscarPokemon',
-          text: 'Resultado: ${resultado.toString()}',
+        CustomSnackBar.show(
+          context: context,
+          message: '${resultado.name} encontrado com sucesso!',
+          type: SnackBarType.success,
         );
       } else {
         setState(() {
           _mensagemErro = 'Pokémon não encontrado.';
         });
 
-        FLog.warning(
-          className: 'PokemonPage',
-          methodName: '_buscarPokemon',
-          text: 'Nenhum resultado para: $nome',
+        CustomSnackBar.show(
+          context: context,
+          message: 'Pokémon não encontrado.',
+          type: SnackBarType.error,
         );
       }
     } catch (e) {
-      setState(() {
-        _mensagemErro = 'Erro ao buscar Pokémon.';
-      });
+      setState(
+        () {
+          _mensagemErro = 'Erro ao buscar Pokémon.';
+        },
+      );
 
-      FLog.error(
-        className: 'PokemonPage',
-        methodName: '_buscarPokemon',
-        text: 'Exceção ao buscar Pokémon',
-        exception: e.toString(),
+      CustomSnackBar.show(
+        context: context,
+        message: 'Erro ao buscar Pokémon.',
+        type: SnackBarType.error,
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Widget _buildResultado() {
-    if (_isLoading) return const CircularProgressIndicator();
-
-    if (_mensagemErro != null) {
-      return Text(_mensagemErro!, style: const TextStyle(color: Colors.red));
-    }
-
-    if (_pokemon == null) {
-      return const Text(
-        'Nenhum resultado encontrado',
+      setState(
+        () {
+          _isLoading = false;
+        },
       );
     }
-
-    return Card(
-      margin: const EdgeInsets.only(top: 24),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Column(
-                children: [
-                  Image.network(
-                    _pokemon!.imageUrl,
-                    height: 100,
-                  ),
-                  Text(
-                    _pokemon!.name.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'ID: ${_pokemon!.id}',
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-            Text('Altura: ${_pokemon!.height}'),
-            Text('Peso: ${_pokemon!.weight}'),
-            const SizedBox(height: 8),
-            Text('Tipos: ${_pokemon!.types.join(', ')}'),
-            Text('Habilidades: ${_pokemon!.abilities.join(', ')}'),
-            const SizedBox(height: 8),
-            const Text(
-              'Status base:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            ..._pokemon!.stats.entries.map(
-              (entry) => Text('${entry.key.toUpperCase()}: ${entry.value}'),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    _favorito ? Icons.favorite : Icons.favorite_border,
-                    color: Colors.red,
-                  ),
-                  onPressed: () async {
-                    setState(
-                      () {
-                        _favorito = !_favorito;
-                        _exibirBotaoSalvar = _favorito;
-                      },
-                    );
-
-                    if (!_favorito && _pokemon != null) {
-                      await FavoritesDatabase.delete(_pokemon!.id);
-
-                      FLog.info(
-                        className: 'PokemonPage',
-                        methodName: 'removerFavorito',
-                        text:
-                            'Pokémon ${_pokemon!.name} removido dos favoritos.',
-                      );
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '${_pokemon!.name} removido dos favoritos.',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                if (_exibirBotaoSalvar)
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      await FavoritesDatabase.insert(_pokemon!);
-
-                      FLog.info(
-                        className: 'PokemonPage',
-                        methodName: 'salvarFavorito',
-                        text:
-                            'Pokémon ${_pokemon!.name} foi favoritado e salvo no SQLite.',
-                      );
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content:
-                              Text('${_pokemon!.name} salvo como favorito!'),
-                        ),
-                      );
-
-                      setState(() {
-                        _exibirBotaoSalvar = false;
-                      });
-                    },
-                    icon: const Icon(Icons.save),
-                    label: const Text('Salvar'),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buscar Pokémon'),
+        title: const Text(
+          'Buscar Pokémon',
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.favorite),
+            icon: const Icon(
+              Icons.favorite,
+            ),
             tooltip: 'Ver favoritos',
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const FavoritosPage()),
+                MaterialPageRoute(
+                  builder: (_) => const FavoritosPage(),
+                ),
               );
             },
           ),
@@ -228,44 +123,103 @@ class _PokemonPageState extends State<PokemonPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const LogsPage(),
+                  builder: (_) => const LogsPokemonPage(),
                 ),
               );
             },
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(
-            16,
-          ),
-          child: Column(
-            children: [
-              TextField(
-                controller: _controller,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do Pokémon',
-                  border: OutlineInputBorder(),
+      body: Builder(
+        builder: (scaffoldContext) => SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(
+              16,
+            ),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _controller,
+                  onSubmitted: (_) => _isLoading
+                      ? null
+                      : _buscarPokemon(
+                          scaffoldContext,
+                        ),
+                  decoration: InputDecoration(
+                    labelText: 'Nome do Pokémon',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: _isLoading
+                          ? null
+                          : () => _buscarPokemon(
+                                scaffoldContext,
+                              ),
+                      tooltip: 'Buscar Pokémon',
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              ElevatedButton.icon(
-                onPressed: _isLoading ? null : _buscarPokemon,
-                icon: const Icon(
-                  Icons.search,
+                const SizedBox(
+                  height: 16,
                 ),
-                label: const Text(
-                  'Buscar',
+                PokemonController().buildResultado(
+                  isLoading: _isLoading,
+                  mensagemErro: _mensagemErro,
+                  pokemon: _pokemon,
+                  cardColor: _pokemon != null
+                      ? PokemonController.getColorByType(_pokemon!.types.first)
+                      : Colors.white,
+                  isDarkText: ThemeData.estimateBrightnessForColor(
+                        _pokemon != null
+                            ? PokemonController.getColorByType(
+                                _pokemon!.types.first)
+                            : Colors.white,
+                      ) ==
+                      Brightness.dark,
+                  onUnfavorite: () async {
+                    if (_pokemon != null && _favorito) {
+                      await FavoritesDatabase.delete(_pokemon!.id);
+                      _pokemon!.isFavorite = false;
+                      setState(() {
+                        _favorito = false;
+                        _exibirBotaoSalvar = false;
+                      });
+                      CustomSnackBar.show(
+                        context: context,
+                        message: '${_pokemon!.name} removido dos favoritos.',
+                        type: SnackBarType.warning,
+                      );
+                    } else if (_pokemon != null && !_favorito) {
+                      await FavoritesDatabase.insert(_pokemon!);
+                      _pokemon!.isFavorite = true;
+                      setState(() {
+                        _favorito = true;
+                        _exibirBotaoSalvar = false;
+                      });
+                      CustomSnackBar.show(
+                        context: context,
+                        message: '${_pokemon!.name} salvo como favorito!',
+                        type: SnackBarType.success,
+                      );
+                    }
+                  },
+                  onSave: () async {
+                    if (_pokemon != null) {
+                      await FavoritesDatabase.insert(_pokemon!);
+                      setState(() {
+                        _exibirBotaoSalvar = false;
+                      });
+                      CustomSnackBar.show(
+                        context: context,
+                        message: '${_pokemon!.name} salvo como favorito!',
+                        type: SnackBarType.success,
+                      );
+                    }
+                  },
+                  favorito: _favorito,
                 ),
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              _buildResultado(),
-            ],
+              ],
+            ),
           ),
         ),
       ),
