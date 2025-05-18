@@ -1,9 +1,10 @@
 import 'package:f_logs/f_logs.dart';
 import 'package:flutter/material.dart';
+import 'package:log_flutter/pages/log/logs_page.dart';
 import 'package:log_flutter/core/models/pokemon_model.dart';
-import 'package:log_flutter/core/services/favorites_database.dart';
 import 'package:log_flutter/core/services/poke_api_service.dart';
 import 'package:log_flutter/pages/favoritos/favoritos_page.dart';
+import 'package:log_flutter/core/databases/favorites_database.dart';
 
 class PokemonPage extends StatefulWidget {
   const PokemonPage({super.key});
@@ -142,11 +143,32 @@ class _PokemonPageState extends State<PokemonPage> {
                     _favorito ? Icons.favorite : Icons.favorite_border,
                     color: Colors.red,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _favorito = !_favorito;
-                      _exibirBotaoSalvar = _favorito;
-                    });
+                  onPressed: () async {
+                    setState(
+                      () {
+                        _favorito = !_favorito;
+                        _exibirBotaoSalvar = _favorito;
+                      },
+                    );
+
+                    if (!_favorito && _pokemon != null) {
+                      await FavoritesDatabase.delete(_pokemon!.id);
+
+                      FLog.info(
+                        className: 'PokemonPage',
+                        methodName: 'removerFavorito',
+                        text:
+                            'Pokémon ${_pokemon!.name} removido dos favoritos.',
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '${_pokemon!.name} removido dos favoritos.',
+                          ),
+                        ),
+                      );
+                    }
                   },
                 ),
                 if (_exibirBotaoSalvar)
@@ -205,7 +227,9 @@ class _PokemonPageState extends State<PokemonPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PokemonPage()),
+                MaterialPageRoute(
+                  builder: (_) => const LogsPage(),
+                ),
               );
             },
           ),

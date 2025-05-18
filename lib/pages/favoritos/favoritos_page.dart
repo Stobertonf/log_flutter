@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:log_flutter/core/models/pokemon_model.dart';
-import 'package:log_flutter/core/services/favorites_database.dart';
+import 'package:log_flutter/core/databases/favorites_database.dart';
 
 class FavoritosPage extends StatefulWidget {
   const FavoritosPage({super.key});
@@ -33,22 +33,41 @@ class _FavoritosPageState extends State<FavoritosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Meus Favoritos')),
+      appBar: AppBar(
+        title: const Text(
+          'Meus Favoritos',
+        ),
+      ),
       body: favoritos.isEmpty
-          ? const Center(child: Text('Nenhum Pokémon favoritado.'))
+          ? const Center(
+              child: Text(
+                'Nenhum Pokémon favoritado.',
+              ),
+            )
           : ListView.builder(
               itemCount: favoritos.length,
               itemBuilder: (context, index) {
                 final p = favoritos[index];
                 return Card(
-                  margin: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.all(
+                    8,
+                  ),
                   child: ListTile(
-                    leading: Image.network(p.imageUrl, height: 50),
-                    title: Text(p.name.toUpperCase()),
-                    subtitle: Text('ID: ${p.id}'),
+                    leading: Image.network(
+                      p.imageUrl,
+                      height: 50,
+                    ),
+                    title: Text(
+                      p.name.toUpperCase(),
+                    ),
+                    subtitle: Text(
+                      'ID: ${p.id}',
+                    ),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () => _removerFavorito(p.id),
+                      onPressed: () => _removerFavorito(
+                        p.id,
+                      ),
                     ),
                   ),
                 );
