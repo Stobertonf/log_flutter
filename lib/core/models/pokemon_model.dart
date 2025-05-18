@@ -7,6 +7,7 @@ class PokemonModel {
   final List<String> abilities;
   final String imageUrl;
   final Map<String, int> stats;
+  bool isFavorite;
 
   PokemonModel({
     required this.id,
@@ -17,6 +18,7 @@ class PokemonModel {
     required this.abilities,
     required this.imageUrl,
     required this.stats,
+    this.isFavorite = false,
   });
 
   factory PokemonModel.fromJson(Map<String, dynamic> json) {
@@ -59,6 +61,7 @@ class PokemonModel {
       'abilities': abilities.join(','),
       'imageUrl': imageUrl,
       'stats': stats.entries.map((e) => '${e.key}:${e.value}').join(','),
+      'isFavorite': isFavorite ? 1 : 0,
     };
   }
 
@@ -77,11 +80,12 @@ class PokemonModel {
           return MapEntry(parts[0], int.tryParse(parts[1]) ?? 0);
         }),
       ),
+      isFavorite: map['isFavorite'] == 1,
     );
   }
 
   @override
   String toString() {
-    return 'ID: $id, Nome: $name, Tipos: $types';
+    return 'ID: $id, Nome: $name, Tipos: $types, Favorito: $isFavorite';
   }
 }
