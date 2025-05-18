@@ -22,17 +22,18 @@ class FavoritesDatabase {
       version: 1,
       onCreate: (db, version) {
         return db.execute('''
-          CREATE TABLE favorites (
-            id INTEGER PRIMARY KEY,
-            name TEXT,
-            height INTEGER,
-            weight INTEGER,
-            types TEXT,
-            abilities TEXT,
-            imageUrl TEXT,
-            stats TEXT
-          )
-        ''');
+        CREATE TABLE favorites (
+          id INTEGER PRIMARY KEY,
+          name TEXT,
+          height INTEGER,
+          weight INTEGER,
+          types TEXT,
+          abilities TEXT,
+          imageUrl TEXT,
+          stats TEXT,
+          isFavorite INTEGER
+        )
+      ''');
       },
     );
   }
