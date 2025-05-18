@@ -1,6 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import '../models/pokemon_model.dart';
+import 'package:log_flutter/core/models/pokemon_model.dart';
 
 class FavoritesDatabase {
   static Database? _db;
