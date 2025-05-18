@@ -4,14 +4,14 @@ import 'package:f_logs/f_logs.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-class LogsPage extends StatefulWidget {
-  const LogsPage({super.key});
+class LogsPokemonPage extends StatefulWidget {
+  const LogsPokemonPage({super.key});
 
   @override
-  State<LogsPage> createState() => _LogsPageState();
+  State<LogsPokemonPage> createState() => _LogsPokemonPageState();
 }
 
-class _LogsPageState extends State<LogsPage> {
+class _LogsPokemonPageState extends State<LogsPokemonPage> {
   List<Log> todosLogs = [];
   List<Log> logsFiltrados = [];
   final TextEditingController _searchController = TextEditingController();
@@ -73,7 +73,9 @@ class _LogsPageState extends State<LogsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Logs de Pokémon'),
+        title: const Text(
+          'Logs de Pokémon',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
